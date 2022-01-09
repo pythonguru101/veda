@@ -4,35 +4,50 @@
     <Header />
     <Card />
     <div class="input_home_container">
-      <input type="text" class="input color" placeholder="Find your tasks" />
+      <input
+        type="text"
+        class="input color"
+        placeholder="Find your tasks"
+        v-model="search"
+      />
       <img src="../assets/search.png" class="input_img" />
     </div>
-    <div class="flex-row">
+    <!-- <div class="flex-row">
       <Button title="Todo" />
       <Button title="completed" />
-    </div>
-    <HomeCard @showModalWithType="showModalWithType" />
-    <HomeCard @showModalWithType="showModalWithType" />
-    <HomeCard @showModalWithType="showModalWithType" />
-    <div class="bottom-container">
+    </div> -->
+    <ul class="no-bullets">
+      <li v-for="item in allTasks" :key="item.id">
+        <HomeCard
+          @showModalWithType="showModalEditTask"
+          :id="item.id"
+          :title="item.title"
+          :description="item.description"
+          :date="item.date"
+          :time="item.time"
+        />
+      </li>
+    </ul>
+    <div
+      :class="
+        allTasks.length >= 3 ? 'bottom-container' : 'bottom-container-position'
+      "
+    >
       <img src="../assets/bottom-bg.png" class="bottom-bg" />
-      <div
-        class="bottom-child"
-        @click="
-          showModal = true;
-          modalType = 0;
-        "
-      >
+      <div class="bottom-child" @click="showModalAddTask">
         <img src="../assets/plus.png" class="plus" />
         <p class="bottom-text">Add Task</p>
       </div>
     </div>
     <transition name="modal">
-      <div v-if="showModal" @close="showModal = false">
+      <div
+        v-if="$store.state.showModal"
+        @close="$store.state.showModal = false"
+      >
         <div class="modal-mask">
           <div class="modal-wrapper">
             <div class="modal-container">
-              <AddTask @closeModal="showModal = false" :modalType="modalType" />
+              <AddorEditTask @closeModal="$store.state.showModal = false" />
             </div>
           </div>
         </div>
@@ -45,9 +60,9 @@
 import Toast from "../hooks/Toast.vue";
 import Header from "../components/Header.vue";
 import Card from "../components/Card.vue";
-import Button from "../components/Button.vue";
+// import Button from "../components/Button.vue";
 import HomeCard from "../components/HomeCard.vue";
-import AddTask from "../components/AddTask.vue";
+import AddorEditTask from "../components/AddorEditTask.vue";
 
 export default {
   name: "Home",
@@ -55,21 +70,39 @@ export default {
     Toast,
     Header,
     Card,
-    Button,
+    // Button,
     HomeCard,
-    AddTask,
+    AddorEditTask,
   },
   data() {
     return {
-      showToast: true,
       showModal: false,
-      modalType: 0, //addTask = 0 and editTask = 1
     };
   },
+  computed: {
+    allTasks() {
+      return JSON.parse(JSON.stringify(this.$store.state.allTasks));
+    },
+    search: {
+      get() {
+        return this.$store.state.search;
+      },
+      set(val) {
+        this.$store.commit("searchHandle", val);
+      },
+    },
+  },
   methods: {
-    showModalWithType() {
-      this.showModal = true;
-      this.modalType = 1;
+    async showModalAddTask() {
+      await this.$store.commit("addorEditModal", 0);
+    },
+    async showModalEditTask(id, date, time) {
+      await this.$store.commit("addorEditModal", 1);
+      await this.$store.commit("setTaskId", {
+        id,
+        date,
+        time,
+      });
     },
   },
 };
